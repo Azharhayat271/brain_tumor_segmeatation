@@ -4,35 +4,39 @@ from ultralytics import YOLO
 import os
 import uuid
 
-# Use headless OpenCV
-os.environ['OPENCV_IO_ENABLE_OPENEXR'] = '1'  # Avoids some OpenCV warnings
-
 app = FastAPI()
-model = YOLO("best.pt")  # Update path
+
+# Load model - ensure 'best.pt' is in your repository
+model = YOLO("best.pt")
 
 @app.post("/predict")
 async def predict(file: UploadFile = File(...)):
     try:
-        # Save uploaded file
-        file_ext = os.path.splitext(file.filename)[1]
-        temp_path = f"temp_{uuid.uuid4()}{file_ext}"
+        # Generate unique filenames
+        temp_path = f"temp_{uuid.uuid4()}.jpg"
+        output_path = f"result_{uuid.uuid4()}.jpg"
         
+        # Save upload
         with open(temp_path, "wb") as f:
             f.write(await file.read())
         
-        # Run prediction (using OpenCV headless)
+        # Process prediction
         results = model.predict(temp_path)
-        output_path = f"result_{uuid.uuid4()}.jpg"
         results[0].save(output_path)
         
         # Cleanup
         os.remove(temp_path)
         
         return FileResponse(output_path)
-
+    
     except Exception as e:
         return {"error": str(e)}
 
 @app.get("/")
 def health_check():
     return {"status": "API is healthy"}
+
+# Add this for Render compatibility
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=int(os.environ.get("PORT", 8000)))
