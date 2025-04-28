@@ -1,0 +1,13 @@
+# Core API
+fastapi
+uvicorn
+python-multipart
+
+# Computer Vision
+ultralytics
+opencv-python-headless
+pillow
+
+# Utilities
+python-dotenv
+uuid
